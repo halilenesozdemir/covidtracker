@@ -1,46 +1,25 @@
-import './App.css'
-import { Card, CardContent, FormControl, MenuItem, Select } from '@mui/material'
-import { useEffect, useState } from 'react'
-import InfoBox from './components/InfoBox'
-import Map from './components/Map'
+import './App.css';
+import { Card, CardContent, FormControl, MenuItem, Select } from '@mui/material';
+import { useEffect, useState } from 'react';
+import InfoBox from './components/InfoBox';
+import Map from './components/Map';
+import Table from './components/Table';
+import { sortData } from './util';
 
 function App() {
   // State => How to write a variable in React
-  const [countries, setCountries] = useState([])
-  const [country, setCountry] = useState('worldwide')
-  const [countryInfo, setCountryInfo] = useState({})
+  const [countries, setCountries] = useState([]);
+  const [country, setCountry] = useState('worldwide');
+  const [countryInfo, setCountryInfo] = useState({});
+  const [tableData, setTableData] = useState([]);
 
   useEffect(() => {
     fetch('https://disease.sh/v3/covid-19/all')
       .then((response) => response.json())
       .then((data) => {
-        setCountryInfo(data)
-      })
-  }, [])
-
-  const onCountryChange = async (e) => {
-    const countryCode = e.target.value
-
-    setCountry(countryCode)
-
-    const url =
-      countryCode === 'worldwide'
-        ? 'https://disease.sh/v3/covid-19/all'
-        : `https://disease.sh/v3/covid-19/countries/${countryCode}`
-
-    await fetch(url)
-      .then((response) => response.json())
-      .then((data) => {
-        setCountry(countryCode)
-        // All of the data from the country response
-        setCountryInfo(data)
-      })
-  }
-
-  console.log('Country Info', countryInfo)
-  //disease.sh/v3/covid-19/all
-  //https://disease.sh/v3/covid-19/countries/[COUNTRY_CODE]
-  //UseEffect => Runs a piece of code based on a given condition.
+        setCountryInfo(data);
+      });
+  }, []);
 
   useEffect(() => {
     const getCountriesData = async () => {
@@ -50,13 +29,34 @@ function App() {
           const countries = data.map((country) => ({
             name: country.country,
             value: country.countryInfo.iso2,
-          }))
-          setCountries(countries)
-        })
-    }
+          }));
+          const sortedData = sortData(data);
+          setTableData(sortedData);
+          setCountries(countries);
+        });
+    };
 
-    getCountriesData()
-  }, [])
+    getCountriesData();
+  }, []);
+
+  const onCountryChange = async (e) => {
+    const countryCode = e.target.value;
+
+    setCountry(countryCode);
+
+    const url =
+      countryCode === 'worldwide'
+        ? 'https://disease.sh/v3/covid-19/all'
+        : `https://disease.sh/v3/covid-19/countries/${countryCode}`;
+
+    await fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        setCountry(countryCode);
+        // All of the data from the country response
+        setCountryInfo(data);
+      });
+  };
 
   return (
     <>
@@ -85,12 +85,13 @@ function App() {
         <Card className='app__right'>
           <CardContent>
             <h3>Live Cases by Country</h3>
+            <Table countries={tableData} />
             <h3>Worldwide new cases</h3>
           </CardContent>
         </Card>
       </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
